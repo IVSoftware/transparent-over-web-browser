@@ -39,6 +39,11 @@ namespace transparent_over_web_browser
     }
     class DragHelper : Label
     {
+        public DragHelper()
+        {
+            BackColor = Color.CornflowerBlue;
+            ForeColor= Color.White;
+        }
         public int Latency { get; set; } = 750;
         int _wdtCount = 0;
         public void Restart(object sender, MouseEventArgs e)
@@ -53,7 +58,6 @@ namespace transparent_over_web_browser
                     Size = label.Size;
                     Visible = true;
                     Location = label.Location;
-                    BackColor = label.BackColor;
                     Font = label.Font;
                     Text = label.Text;
                     TextAlign = label.TextAlign;
