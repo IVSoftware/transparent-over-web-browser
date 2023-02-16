@@ -32,16 +32,14 @@ namespace transparent_over_web_browser
                 }
             label1.Region = region;
             label1.MouseMove += _dragHelper.Restart;
-            
+
             this.Controls.Add(_dragHelper);
         }
-        DragHelper _dragHelper = new DragHelper
-        {
-            Visible = false,
-        };
+        private readonly DragHelper _dragHelper = new DragHelper();
     }
     class DragHelper : Label
     {
+        public int Latency { get; set; } = 750;
         int _wdtCount = 0;
         public void Restart(object sender, MouseEventArgs e)
         {
@@ -62,7 +60,7 @@ namespace transparent_over_web_browser
                     BringToFront();
 
                     Task
-                    .Delay(500)
+                    .Delay(Latency)
                     .GetAwaiter()
                     .OnCompleted(() =>
                     {
@@ -118,7 +116,7 @@ namespace transparent_over_web_browser
             Visible = false;
             // Latency before enable again
             Task
-            .Delay(1000)
+            .Delay(Latency)
             .GetAwaiter()
             .OnCompleted(() =>
             {
