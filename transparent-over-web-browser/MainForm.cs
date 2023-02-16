@@ -31,6 +31,40 @@ namespace transparent_over_web_browser
                     }
                 }
             label1.Region = region;
+            label1.MouseMove += _dragHelper.Restart;
+            
+            this.Controls.Add(_dragHelper);
+        }
+        DragHelper _dragHelper = new DragHelper
+        {
+            Visible = false,
+        };
+    }
+    class DragHelper : Label
+    {
+        int _wdtCount = 0;
+        public void Restart(object sender, MouseEventArgs e)
+        {
+            if(sender is Label label)
+            {
+                int captureCount = ++_wdtCount;
+                foreach (var pi in typeof(Label).GetProperties().Where(_ => _.CanWrite))
+                {
+                    if (pi.Name.Equals(nameof(Region))) continue;
+                    pi.SetValue(this, pi.GetValue(label));
+                }
+                BringToFront();
+                Task
+                .Delay(500)
+                .GetAwaiter()
+                .OnCompleted(() =>
+                {
+                    if (captureCount.Equals(_wdtCount))
+                    {
+                        Visible= false;
+                    }
+                });
+            }
         }
     }
 }
