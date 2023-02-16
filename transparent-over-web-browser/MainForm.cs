@@ -45,26 +45,86 @@ namespace transparent_over_web_browser
         int _wdtCount = 0;
         public void Restart(object sender, MouseEventArgs e)
         {
-            if(sender is Label label)
+            if (_dragEnabled)
             {
-                int captureCount = ++_wdtCount;
-                foreach (var pi in typeof(Label).GetProperties().Where(_ => _.CanWrite))
+                if (sender is Label label)
                 {
-                    if (pi.Name.Equals(nameof(Region))) continue;
-                    pi.SetValue(this, pi.GetValue(label));
-                }
-                BringToFront();
-                Task
-                .Delay(500)
-                .GetAwaiter()
-                .OnCompleted(() =>
-                {
-                    if (captureCount.Equals(_wdtCount))
+                    _label = label;
+                    int captureCount = ++_wdtCount;
+                    label.Visible = false;
+                    Size = label.Size;
+                    Visible = true;
+                    Location = label.Location;
+                    BackColor = label.BackColor;
+                    Font = label.Font;
+                    Text = label.Text;
+                    TextAlign = label.TextAlign;
+                    BringToFront();
+
+                    Task
+                    .Delay(500)
+                    .GetAwaiter()
+                    .OnCompleted(() =>
                     {
-                        Visible= false;
-                    }
-                });
+                        if (captureCount.Equals(_wdtCount))
+                        {
+                            if (MouseButtons.Equals(MouseButtons.None))
+                            {
+                                Visible = false;
+                                label.Visible = true;
+                            }
+                        }
+                    });
+                }
             }
         }
+        Label _label = null;
+
+        Point
+            // Where's the cursor in relation to screen when mouse button is pressed?
+            _mouseDownScreen = new Point(),
+            // Where's the 'map' control when mouse button is pressed?
+            _controlDownPoint = new Point(),
+            // How much has the mouse moved from it's original mouse-down location?
+            _mouseDelta = new Point();
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            _dragEnabled= false;
+            _mouseDownScreen = PointToScreen(e.Location);
+            _controlDownPoint = Location;
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (MouseButtons.Equals(MouseButtons.Left))
+            {
+                var screen = PointToScreen(e.Location);
+                _mouseDelta = new Point(screen.X - _mouseDownScreen.X, screen.Y - _mouseDownScreen.Y);
+                var newControlLocation = new Point(_controlDownPoint.X + _mouseDelta.X, _controlDownPoint.Y + _mouseDelta.Y);
+                if (!Location.Equals(newControlLocation))
+                {
+                    Location = newControlLocation;
+                }
+            }
+        }
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            _label.Visible = true;
+            _label.Location = Location;
+            Visible = false;
+            // Latency before enable again
+            Task
+            .Delay(1000)
+            .GetAwaiter()
+            .OnCompleted(() =>
+            {
+                _dragEnabled = true;
+            });
+        }
+        bool _dragEnabled = true;
     }
 }
